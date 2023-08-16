@@ -1,0 +1,8 @@
+[package]
+name = "vendace"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokio = { version = "1.31.0", features = ["macros", "rt", "rt-multi-thread"] }
+anyhow = "1.0.72"
