@@ -61,8 +61,8 @@ pub async fn executor(rx: mpsc::Receiver<String>) {
                             pos_set = true;
                         },
                         "moves" => {
+                            i += 1;
                             while i < tokens.len() {
-                                i += 1;
                                 let token = tokens[i];
 
                                 let r#move = match Move::try_from(token) {
@@ -74,6 +74,7 @@ pub async fn executor(rx: mpsc::Receiver<String>) {
                                 };
 
                                 board.apply_unchecked(&r#move);
+                                i += 1;
                             }
 
                             mov_set = true;
