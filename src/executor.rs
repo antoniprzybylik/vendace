@@ -3,6 +3,12 @@ use std::sync::mpsc;
 use super::board::Board;
 use super::board::FENString;
 use super::book::Move;
+use super::book::Book;
+use super::book::BookEntry;
+
+lazy_static! {
+    static ref BOOK: Book = Book::load("/usr/share/gnuchess/smallbook.bin").unwrap();
+}
 
 pub async fn executor(rx: mpsc::Receiver<String>) {
     let mut board: Board = Board::new();
@@ -79,8 +85,20 @@ pub async fn executor(rx: mpsc::Receiver<String>) {
                 }
             },
             "go" => {
-                // TODO: Graj otwarcie z książki.
-                println!("bestmove e2e4");
+                // TODO: Zwracaj uwagę na parametry.
+
+                if let Some(moves) = BOOK.get(&board.hash()) {
+                    let (mut best_move, mut best_weight) = (0u16, 0u16);
+                    for BookEntry { r#move, weight } in moves.iter() {
+                        if *weight > best_weight {
+                            (best_move, best_weight) = (*r#move, *weight);
+                        }
+                    }
+
+                    println!("bestmove {}", Move::try_from(best_move).unwrap());
+                } else {
+                    // TODO: Losowe ruchy.
+                }
             },
             _ => unreachable!(),
         }

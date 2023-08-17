@@ -96,7 +96,7 @@ impl Move {
     }
 
     pub fn from_file(&self) -> char {
-        const ALPHABET: [char; 8] = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+        const ALPHABET: [char; 8] = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
         char::from(ALPHABET[(self.from_file_number()-1) as usize])
     }
 
@@ -116,7 +116,7 @@ impl Move {
     }
 
     pub fn to_file(&self) -> char {
-        const ALPHABET: [char; 8] = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+        const ALPHABET: [char; 8] = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
         char::from(ALPHABET[(self.to_file_number()-1) as usize])
     }
 
@@ -219,13 +219,13 @@ impl std::convert::TryFrom<&str> for Move {
 impl fmt::Display for Move {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if let Some(piece) = self.promotion() {
-            write!(f, "({}{} -> {}{} [{}])",
+            write!(f, "{}{}{}{}{}",
                    self.from_file(),
                    self.from_row(),
                    self.to_file(),
                    self.to_row(), piece)
         } else {
-            write!(f, "({}{} -> {}{})",
+            write!(f, "{}{}{}{}",
                    self.from_file(),
                    self.from_row(),
                    self.to_file(),
@@ -245,10 +245,10 @@ fn test_move() {
         Err(_) => panic!(),
     };
     assert_eq!(m.from_file_number(), 5);
-    assert_eq!(m.from_file(), 'E');
+    assert_eq!(m.from_file(), 'e');
     assert_eq!(m.from_row(), 2);
     assert_eq!(m.to_file_number(), 5);
-    assert_eq!(m.to_file(), 'E');
+    assert_eq!(m.to_file(), 'e');
     assert_eq!(m.to_row(), 4);
     assert_eq!(m.promotion(), None);
 
