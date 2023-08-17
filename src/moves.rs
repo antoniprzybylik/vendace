@@ -106,7 +106,7 @@ pub fn player_moves(color: &Color, board: &Board) -> Vec<Move> {
     moves
 }
 
-fn king_moves_unchecked(field: &Field, board: &Board) -> Vec<Field> {
+fn king_moves_unchecked(field: &Field, _board: &Board) -> Vec<Field> {
     match (field.row, field.file) {
         (1..=6, 1..=6) => vec![
             Field {
@@ -528,7 +528,7 @@ fn bishop_moves_unchecked(field: &Field, board: &Board) -> Vec<Field> {
     moves
 }
 
-fn knight_moves_unchecked(field: &Field, board: &Board) -> Vec<Field> {
+fn knight_moves_unchecked(field: &Field, _board: &Board) -> Vec<Field> {
     let to_filter = [
         Field {
             row: field.row - 1,
