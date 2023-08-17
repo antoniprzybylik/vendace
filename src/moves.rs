@@ -108,7 +108,7 @@ pub fn player_moves(color: &Color, board: &Board) -> Vec<Move> {
 
 fn king_moves_unchecked(field: &Field, _board: &Board) -> Vec<Field> {
     match (field.get_row(), field.get_file()) {
-        (1..=6, 1..=6) => vec![
+        (2..=7, 2..=7) => vec![
             Field::build_unchecked(field.get_row() - 1, field.get_file() - 1),
             Field::build_unchecked(field.get_row() - 1, field.get_file()),
             Field::build_unchecked(field.get_row() - 1, field.get_file() + 1),
@@ -118,50 +118,50 @@ fn king_moves_unchecked(field: &Field, _board: &Board) -> Vec<Field> {
             Field::build_unchecked(field.get_row() + 1, field.get_file()),
             Field::build_unchecked(field.get_row() + 1, field.get_file() + 1),
         ],
-        (1..=6, 0) => vec![
+        (2..=7, 1) => vec![
             Field::build_unchecked(field.get_row() - 1, field.get_file()),
             Field::build_unchecked(field.get_row() - 1, field.get_file() + 1),
             Field::build_unchecked(field.get_row(), field.get_file() + 1),
             Field::build_unchecked(field.get_row() + 1, field.get_file()),
             Field::build_unchecked(field.get_row() + 1, field.get_file() + 1),
         ],
-        (1..=6, 7) => vec![
+        (2..=7, 8) => vec![
             Field::build_unchecked(field.get_row() - 1, field.get_file() - 1),
             Field::build_unchecked(field.get_row() - 1, field.get_file()),
             Field::build_unchecked(field.get_row(), field.get_file() - 1),
             Field::build_unchecked(field.get_row() + 1, field.get_file() - 1),
             Field::build_unchecked(field.get_row() + 1, field.get_file()),
         ],
-        (0, 1..=6) => vec![
+        (1, 2..=7) => vec![
             Field::build_unchecked(field.get_row(), field.get_file() - 1),
             Field::build_unchecked(field.get_row(), field.get_file() + 1),
             Field::build_unchecked(field.get_row() + 1, field.get_file() - 1),
             Field::build_unchecked(field.get_row() + 1, field.get_file()),
             Field::build_unchecked(field.get_row() + 1, field.get_file() + 1),
         ],
-        (7, 1..=6) => vec![
+        (8, 2..=7) => vec![
             Field::build_unchecked(field.get_row() - 1, field.get_file() - 1),
             Field::build_unchecked(field.get_row() - 1, field.get_file()),
             Field::build_unchecked(field.get_row() - 1, field.get_file() + 1),
             Field::build_unchecked(field.get_row(), field.get_file() - 1),
             Field::build_unchecked(field.get_row(), field.get_file() + 1),
         ],
-        (0, 0) => vec![
+        (1, 1) => vec![
             Field::build_unchecked(field.get_row(), field.get_file() + 1),
             Field::build_unchecked(field.get_row() + 1, field.get_file()),
             Field::build_unchecked(field.get_row() + 1, field.get_file() + 1),
         ],
-        (0, 7) => vec![
+        (1, 8) => vec![
             Field::build_unchecked(field.get_row(), field.get_file() - 1),
             Field::build_unchecked(field.get_row() + 1, field.get_file() - 1),
             Field::build_unchecked(field.get_row() + 1, field.get_file()),
         ],
-        (7, 0) => vec![
+        (8, 1) => vec![
             Field::build_unchecked(field.get_row() - 1, field.get_file()),
             Field::build_unchecked(field.get_row() - 1, field.get_file() + 1),
             Field::build_unchecked(field.get_row(), field.get_file() + 1),
         ],
-        (7, 7) => vec![
+        (8, 8) => vec![
             Field::build_unchecked(field.get_row() - 1, field.get_file() - 1),
             Field::build_unchecked(field.get_row() - 1, field.get_file()),
             Field::build_unchecked(field.get_row(), field.get_file() - 1),
