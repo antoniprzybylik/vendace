@@ -302,6 +302,10 @@ fn queen_moves_unchecked(field: &Field, board: &Board) -> Vec<Field> {
 
     for i in 1..=8 {
         let field = Field { file, row: row + i };
+        if !field.on_board() {
+            break;
+        }
+
         let field_content = *board.field_content(&field);
 
         if field_content == None {
@@ -322,6 +326,10 @@ fn queen_moves_unchecked(field: &Field, board: &Board) -> Vec<Field> {
             file: file + i,
             row: row + i,
         };
+        if !field.on_board() {
+            break;
+        }
+
         let field_content = *board.field_content(&field);
 
         if field_content == None {
@@ -339,6 +347,10 @@ fn queen_moves_unchecked(field: &Field, board: &Board) -> Vec<Field> {
 
     for i in 1..=8 {
         let field = Field { file, row: row - i };
+        if !field.on_board() {
+            break;
+        }
+
         let field_content = *board.field_content(&field);
 
         if field_content == None {
@@ -359,6 +371,10 @@ fn queen_moves_unchecked(field: &Field, board: &Board) -> Vec<Field> {
             file: file + i,
             row: row - i,
         };
+        if !field.on_board() {
+            break;
+        }
+
         let field_content = *board.field_content(&field);
 
         if field_content == None {
@@ -379,6 +395,10 @@ fn queen_moves_unchecked(field: &Field, board: &Board) -> Vec<Field> {
             file: file + i,
             row,
         };
+        if !field.on_board() {
+            break;
+        }
+
         let field_content = *board.field_content(&field);
 
         if field_content == None {
@@ -399,6 +419,10 @@ fn queen_moves_unchecked(field: &Field, board: &Board) -> Vec<Field> {
             file: file - i,
             row: row - i,
         };
+        if !field.on_board() {
+            break;
+        }
+
         let field_content = *board.field_content(&field);
 
         if field_content == None {
@@ -417,8 +441,36 @@ fn queen_moves_unchecked(field: &Field, board: &Board) -> Vec<Field> {
     for i in 1..=8 {
         let field = Field {
             file: file - i,
-            row: row + 1,
+            row: row,
         };
+        if !field.on_board() {
+            break;
+        }
+
+        let field_content = *board.field_content(&field);
+
+        if field_content == None {
+            moves.push(field);
+            continue;
+        }
+
+        if field_content.unwrap().color == color {
+            break;
+        } else {
+            moves.push(field);
+            break;
+        }
+    }
+
+    for i in 1..=8 {
+        let field = Field {
+            file: file - i,
+            row: row + i,
+        };
+        if !field.on_board() {
+            break;
+        }
+
         let field_content = *board.field_content(&field);
 
         if field_content == None {
@@ -450,6 +502,10 @@ fn bishop_moves_unchecked(field: &Field, board: &Board) -> Vec<Field> {
             file: file + i,
             row: row + i,
         };
+        if !field.on_board() {
+            break;
+        }
+
         let field_content = *board.field_content(&field);
 
         if field_content == None {
@@ -470,6 +526,10 @@ fn bishop_moves_unchecked(field: &Field, board: &Board) -> Vec<Field> {
             file: file - i,
             row: row - i,
         };
+        if !field.on_board() {
+            break;
+        }
+
         let field_content = *board.field_content(&field);
 
         if field_content == None {
@@ -490,6 +550,10 @@ fn bishop_moves_unchecked(field: &Field, board: &Board) -> Vec<Field> {
             file: file + i,
             row: row - i,
         };
+        if !field.on_board() {
+            break;
+        }
+
         let field_content = *board.field_content(&field);
 
         if field_content == None {
@@ -508,8 +572,12 @@ fn bishop_moves_unchecked(field: &Field, board: &Board) -> Vec<Field> {
     for i in 1..=8 {
         let field = Field {
             file: file - i,
-            row: row + 1,
+            row: row + i,
         };
+        if !field.on_board() {
+            break;
+        }
+
         let field_content = *board.field_content(&field);
 
         if field_content == None {
@@ -584,6 +652,10 @@ fn rook_moves_unchecked(field: &Field, board: &Board) -> Vec<Field> {
 
     for i in 1..=8 {
         let field = Field { file, row: row + i };
+        if !field.on_board() {
+            break;
+        }
+
         let field_content = *board.field_content(&field);
 
         if field_content == None {
@@ -601,6 +673,10 @@ fn rook_moves_unchecked(field: &Field, board: &Board) -> Vec<Field> {
 
     for i in 1..=8 {
         let field = Field { file, row: row - i };
+        if !field.on_board() {
+            break;
+        }
+
         let field_content = *board.field_content(&field);
 
         if field_content == None {
@@ -621,6 +697,10 @@ fn rook_moves_unchecked(field: &Field, board: &Board) -> Vec<Field> {
             file: file + i,
             row,
         };
+        if !field.on_board() {
+            break;
+        }
+
         let field_content = *board.field_content(&field);
 
         if field_content == None {
@@ -641,6 +721,10 @@ fn rook_moves_unchecked(field: &Field, board: &Board) -> Vec<Field> {
             file: file - i,
             row,
         };
+        if !field.on_board() {
+            break;
+        }
+
         let field_content = *board.field_content(&field);
 
         if field_content == None {
