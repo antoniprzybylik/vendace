@@ -172,7 +172,7 @@ fn king_moves_unchecked(field: &Field, _board: &Board) -> Vec<Field> {
     }
 }
 
-fn go_in_dir(field: &Field, board: &Board, we: i32, ns: i32) -> Vec<Field> {
+fn go_in_dir(field: &Field, board: &Board, ns: i32, we: i32) -> Vec<Field> {
     let mut moves: Vec<Field> = Vec::new();
     let (file, row) = (field.get_file(), field.get_row());
     let color = match board.field_content(&field) {
@@ -181,7 +181,7 @@ fn go_in_dir(field: &Field, board: &Board, we: i32, ns: i32) -> Vec<Field> {
     };
 
     for i in 1..=8 {
-        if let Some(field) = Field::build(file as i32 + i * we, row as i32 + i * ns) {
+        if let Some(field) = Field::build(row as i32 + i * ns, file as i32 + i * we) {
             let field_content = *board.field_content(&field);
 
             if field_content == None {
