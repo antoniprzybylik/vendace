@@ -106,8 +106,8 @@ pub fn player_moves(color: &Color, board: &Board) -> Vec<Move> {
     moves
 }
 
-fn king_moves_unchecked(field: &Field, _board: &Board) -> Vec<Field> {
-    match (field.get_row(), field.get_file()) {
+fn king_moves_unchecked(field: &Field, board: &Board) -> Vec<Field> {
+    let to_filter = match (field.get_row(), field.get_file()) {
         (2..=7, 2..=7) => vec![
             Field::build_unchecked(field.get_row() - 1, field.get_file() - 1),
             Field::build_unchecked(field.get_row() - 1, field.get_file()),
@@ -169,7 +169,26 @@ fn king_moves_unchecked(field: &Field, _board: &Board) -> Vec<Field> {
 
         // Non-existent field.
         _ => vec![],
+    };
+
+    let color = match board.field_content(field) {
+        Some(piece) => piece.color,
+        None => Color::White,
+    };
+    let mut moves: Vec<Field> = Vec::new();
+    for field in to_filter.into_iter() {
+        match board.field_content(&field) {
+            Some(Piece {
+                kind_of_piece: _,
+                color: piece_color,
+            }) if *piece_color == color => {}
+            _ => {
+                moves.push(field);
+            }
+        }
     }
+
+    moves
 }
 
 fn go_in_dir(field: &Field, board: &Board, ns: i32, we: i32) -> Vec<Field> {
@@ -227,7 +246,7 @@ fn bishop_moves_unchecked(field: &Field, board: &Board) -> Vec<Field> {
     moves
 }
 
-fn knight_moves_unchecked(field: &Field, _board: &Board) -> Vec<Field> {
+fn knight_moves_unchecked(field: &Field, board: &Board) -> Vec<Field> {
     let to_filter = [
         Field::build(field.get_row() as i32 - 1, field.get_file() as i32 - 2),
         Field::build(field.get_row() as i32 - 2, field.get_file() as i32 - 1),
@@ -239,10 +258,22 @@ fn knight_moves_unchecked(field: &Field, _board: &Board) -> Vec<Field> {
         Field::build(field.get_row() as i32 + 1, field.get_file() as i32 - 2),
     ];
 
+    let color = match board.field_content(field) {
+        Some(piece) => piece.color,
+        None => Color::White,
+    };
     let mut moves: Vec<Field> = Vec::new();
     for field in to_filter.into_iter() {
         if let Some(field) = field {
-            moves.push(field);
+            match board.field_content(&field) {
+                Some(Piece {
+                    kind_of_piece: _,
+                    color: piece_color,
+                }) if *piece_color == color => {}
+                _ => {
+                    moves.push(field);
+                }
+            }
         }
     }
 
