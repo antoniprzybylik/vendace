@@ -310,7 +310,7 @@ fn pawn_moves_unchecked(field: &Field, board: &Board) -> Vec<Field> {
 
     let e_field = Field::build(field.get_row() as i32, field.get_file() as i32 + 1);
     if let Some(field) = e_field {
-        if board.can_en_passant(field.get_file() + 1)
+        if board.can_en_passant(field.get_file())
             && ((color == Color::White && field.get_row() == 5)
                 || (color == Color::Black && field.get_row() == 4))
         {
@@ -324,7 +324,7 @@ fn pawn_moves_unchecked(field: &Field, board: &Board) -> Vec<Field> {
 
     let w_field = Field::build(field.get_row() as i32, field.get_file() as i32 - 1);
     if let Some(field) = w_field {
-        if board.can_en_passant(field.get_file() - 1)
+        if board.can_en_passant(field.get_file())
             && ((color == Color::White && field.get_row() == 5)
                 || (color == Color::Black && field.get_row() == 4))
         {
