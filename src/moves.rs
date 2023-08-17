@@ -268,13 +268,26 @@ fn pawn_moves_unchecked(field: &Field, board: &Board) -> Vec<Field> {
     };
 
     let next_row = match color {
-        Color::White => field.get_row() + 1,
-        Color::Black => field.get_row() - 1,
+        Color::White => field.get_row() as i32 + 1,
+        Color::Black => field.get_row() as i32 - 1,
+    };
+    let next2_row = match color {
+        Color::White => field.get_row() as i32 + 2,
+        Color::Black => field.get_row() as i32 - 2,
     };
 
-    let next_field = Field::build_unchecked(next_row, field.get_file());
-    if *board.field_content(&next_field) == None {
-        moves.push(next_field);
+    if let Some(next_field) = Field::build(next_row, field.get_file() as i32) {
+        if *board.field_content(&next_field) == None {
+            moves.push(next_field);
+        } else if (color == Color::White && field.get_row() == 2)
+            || (color == Color::Black && field.get_row() == 7)
+        {
+            if let Some(next2_field) = Field::build(next2_row, field.get_file() as i32) {
+                if *board.field_content(&next2_field) == None {
+                    moves.push(next2_field);
+                }
+            }
+        }
     }
 
     let nw_field = Field::build(next_row as i32, field.get_file() as i32 - 1);
