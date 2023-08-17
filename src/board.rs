@@ -411,6 +411,38 @@ impl Board {
 
 // TODO: Test apply_unchecked()
 
+impl fmt::Display for Board {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut string: String = String::new();
+
+        for row in 0..8 {
+            for file in 0..8 {
+                let field_content = self.fields[row][file];
+                if let Some(piece) = field_content {
+                    string += match piece.color {
+                        Color::White => "w",
+                        Color::Black => "b",
+                    };
+
+                    string += match piece.kind_of_piece {
+                        KindOfPiece::King => "k",
+                        KindOfPiece::Queen => "q",
+                        KindOfPiece::Bishop => "b",
+                        KindOfPiece::Knight => "n",
+                        KindOfPiece::Rook => "r",
+                        KindOfPiece::Pawn => "p",
+                    };
+                } else {
+                    string += "  ";
+                }
+            }
+            string += "\n";
+        }
+
+        write!(f, "{}", string)
+    }
+}
+
 impl std::convert::TryFrom<FENString> for Board {
     type Error = ();
 
