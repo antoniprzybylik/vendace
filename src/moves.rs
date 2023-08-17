@@ -68,8 +68,8 @@ fn possible_moves(field: &Field, board: &Board) -> Vec<Move> {
 
     for target_field in fields.into_iter() {
         if piece.kind_of_piece == KindOfPiece::Pawn
-                        && (target_field.row == 1 || target_field.row
-                             == 8) {
+            && (target_field.row == 1 || target_field.row == 8)
+        {
             moves.push(Move::build(field.clone(), target_field, Some(KindOfPiece::Queen)).unwrap());
         } else {
             moves.push(Move::build(field.clone(), target_field, None).unwrap());
