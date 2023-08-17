@@ -103,10 +103,7 @@ impl Move {
     }
 
     pub fn from_field(&self) -> Field {
-        Field {
-            row: self.from_row(),
-            file: self.from_file_number(),
-        }
+        Field::build_unchecked(self.from_row(), self.from_file_number())
     }
 
     pub fn to_file_number(&self) -> u8 {
@@ -123,10 +120,7 @@ impl Move {
     }
 
     pub fn to_field(&self) -> Field {
-        Field {
-            row: self.to_row(),
-            file: self.to_file_number(),
-        }
+        Field::build_unchecked(self.to_row(), self.to_file_number())
     }
 
     pub fn promotion(&self) -> Option<KindOfPiece> {
@@ -143,10 +137,10 @@ impl Move {
     pub fn build(f1: Field, f2: Field, piece: Option<KindOfPiece>) -> Result<Self, ()> {
         let mut code: u16 = 0;
 
-        code |= (f2.file - 1) as u16;
-        code |= ((f2.row - 1) as u16) << 3;
-        code |= ((f1.file - 1) as u16) << 6;
-        code |= ((f1.row - 1) as u16) << 9;
+        code |= (f2.get_file() - 1) as u16;
+        code |= ((f2.get_row() - 1) as u16) << 3;
+        code |= ((f1.get_file() - 1) as u16) << 6;
+        code |= ((f1.get_row() - 1) as u16) << 9;
 
         code |= match piece {
             None => 0,

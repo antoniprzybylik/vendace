@@ -11,7 +11,7 @@ fn is_check(board: &Board, color: &Color) -> bool {
 
     for row in 1..=8 {
         for file in 1..=8 {
-            let field = Field { row, file };
+            let field = Field::build_unchecked(row, file);
             if let Some(piece) = board.field_content(&field) {
                 if piece.color == enemy_color {
                     enemy_positions.push(field);
@@ -68,7 +68,7 @@ fn possible_moves(field: &Field, board: &Board) -> Vec<Move> {
 
     for target_field in fields.into_iter() {
         if piece.kind_of_piece == KindOfPiece::Pawn
-            && (target_field.row == 1 || target_field.row == 8)
+            && (target_field.get_row() == 1 || target_field.get_row() == 8)
         {
             moves.push(Move::build(field.clone(), target_field, Some(KindOfPiece::Queen)).unwrap());
         } else {
@@ -94,7 +94,7 @@ pub fn player_moves(color: &Color, board: &Board) -> Vec<Move> {
 
     for row in 1..=8 {
         for file in 1..=8 {
-            let field = Field { row, file };
+            let field = Field::build_unchecked(row, file);
             if let Some(piece) = board.field_content(&field) {
                 if piece.color == *color {
                     moves.append(&mut possible_moves(&field, board));
@@ -107,184 +107,64 @@ pub fn player_moves(color: &Color, board: &Board) -> Vec<Move> {
 }
 
 fn king_moves_unchecked(field: &Field, _board: &Board) -> Vec<Field> {
-    match (field.row, field.file) {
+    match (field.get_row(), field.get_file()) {
         (1..=6, 1..=6) => vec![
-            Field {
-                row: field.row - 1,
-                file: field.file - 1,
-            },
-            Field {
-                row: field.row - 1,
-                file: field.file,
-            },
-            Field {
-                row: field.row - 1,
-                file: field.file + 1,
-            },
-            Field {
-                row: field.row,
-                file: field.file - 1,
-            },
-            Field {
-                row: field.row,
-                file: field.file + 1,
-            },
-            Field {
-                row: field.row + 1,
-                file: field.file - 1,
-            },
-            Field {
-                row: field.row + 1,
-                file: field.file,
-            },
-            Field {
-                row: field.row + 1,
-                file: field.file + 1,
-            },
+            Field::build_unchecked(field.get_row() - 1, field.get_file() - 1),
+            Field::build_unchecked(field.get_row() - 1, field.get_file()),
+            Field::build_unchecked(field.get_row() - 1, field.get_file() + 1),
+            Field::build_unchecked(field.get_row(), field.get_file() - 1),
+            Field::build_unchecked(field.get_row(), field.get_file() + 1),
+            Field::build_unchecked(field.get_row() + 1, field.get_file() - 1),
+            Field::build_unchecked(field.get_row() + 1, field.get_file()),
+            Field::build_unchecked(field.get_row() + 1, field.get_file() + 1),
         ],
         (1..=6, 0) => vec![
-            Field {
-                row: field.row - 1,
-                file: field.file,
-            },
-            Field {
-                row: field.row - 1,
-                file: field.file + 1,
-            },
-            Field {
-                row: field.row,
-                file: field.file + 1,
-            },
-            Field {
-                row: field.row + 1,
-                file: field.file,
-            },
-            Field {
-                row: field.row + 1,
-                file: field.file + 1,
-            },
+            Field::build_unchecked(field.get_row() - 1, field.get_file()),
+            Field::build_unchecked(field.get_row() - 1, field.get_file() + 1),
+            Field::build_unchecked(field.get_row(), field.get_file() + 1),
+            Field::build_unchecked(field.get_row() + 1, field.get_file()),
+            Field::build_unchecked(field.get_row() + 1, field.get_file() + 1),
         ],
         (1..=6, 7) => vec![
-            Field {
-                row: field.row - 1,
-                file: field.file - 1,
-            },
-            Field {
-                row: field.row - 1,
-                file: field.file,
-            },
-            Field {
-                row: field.row,
-                file: field.file - 1,
-            },
-            Field {
-                row: field.row + 1,
-                file: field.file - 1,
-            },
-            Field {
-                row: field.row + 1,
-                file: field.file,
-            },
+            Field::build_unchecked(field.get_row() - 1, field.get_file() - 1),
+            Field::build_unchecked(field.get_row() - 1, field.get_file()),
+            Field::build_unchecked(field.get_row(), field.get_file() - 1),
+            Field::build_unchecked(field.get_row() + 1, field.get_file() - 1),
+            Field::build_unchecked(field.get_row() + 1, field.get_file()),
         ],
         (0, 1..=6) => vec![
-            Field {
-                row: field.row,
-                file: field.file - 1,
-            },
-            Field {
-                row: field.row,
-                file: field.file + 1,
-            },
-            Field {
-                row: field.row + 1,
-                file: field.file - 1,
-            },
-            Field {
-                row: field.row + 1,
-                file: field.file,
-            },
-            Field {
-                row: field.row + 1,
-                file: field.file + 1,
-            },
+            Field::build_unchecked(field.get_row(), field.get_file() - 1),
+            Field::build_unchecked(field.get_row(), field.get_file() + 1),
+            Field::build_unchecked(field.get_row() + 1, field.get_file() - 1),
+            Field::build_unchecked(field.get_row() + 1, field.get_file()),
+            Field::build_unchecked(field.get_row() + 1, field.get_file() + 1),
         ],
         (7, 1..=6) => vec![
-            Field {
-                row: field.row - 1,
-                file: field.file - 1,
-            },
-            Field {
-                row: field.row - 1,
-                file: field.file,
-            },
-            Field {
-                row: field.row - 1,
-                file: field.file + 1,
-            },
-            Field {
-                row: field.row,
-                file: field.file - 1,
-            },
-            Field {
-                row: field.row,
-                file: field.file + 1,
-            },
+            Field::build_unchecked(field.get_row() - 1, field.get_file() - 1),
+            Field::build_unchecked(field.get_row() - 1, field.get_file()),
+            Field::build_unchecked(field.get_row() - 1, field.get_file() + 1),
+            Field::build_unchecked(field.get_row(), field.get_file() - 1),
+            Field::build_unchecked(field.get_row(), field.get_file() + 1),
         ],
         (0, 0) => vec![
-            Field {
-                row: field.row,
-                file: field.file + 1,
-            },
-            Field {
-                row: field.row + 1,
-                file: field.file,
-            },
-            Field {
-                row: field.row + 1,
-                file: field.file + 1,
-            },
+            Field::build_unchecked(field.get_row(), field.get_file() + 1),
+            Field::build_unchecked(field.get_row() + 1, field.get_file()),
+            Field::build_unchecked(field.get_row() + 1, field.get_file() + 1),
         ],
         (0, 7) => vec![
-            Field {
-                row: field.row,
-                file: field.file - 1,
-            },
-            Field {
-                row: field.row + 1,
-                file: field.file - 1,
-            },
-            Field {
-                row: field.row + 1,
-                file: field.file,
-            },
+            Field::build_unchecked(field.get_row(), field.get_file() - 1),
+            Field::build_unchecked(field.get_row() + 1, field.get_file() - 1),
+            Field::build_unchecked(field.get_row() + 1, field.get_file()),
         ],
         (7, 0) => vec![
-            Field {
-                row: field.row - 1,
-                file: field.file,
-            },
-            Field {
-                row: field.row - 1,
-                file: field.file + 1,
-            },
-            Field {
-                row: field.row,
-                file: field.file + 1,
-            },
+            Field::build_unchecked(field.get_row() - 1, field.get_file()),
+            Field::build_unchecked(field.get_row() - 1, field.get_file() + 1),
+            Field::build_unchecked(field.get_row(), field.get_file() + 1),
         ],
         (7, 7) => vec![
-            Field {
-                row: field.row - 1,
-                file: field.file - 1,
-            },
-            Field {
-                row: field.row - 1,
-                file: field.file,
-            },
-            Field {
-                row: field.row,
-                file: field.file - 1,
-            },
+            Field::build_unchecked(field.get_row() - 1, field.get_file() - 1),
+            Field::build_unchecked(field.get_row() - 1, field.get_file()),
+            Field::build_unchecked(field.get_row(), field.get_file() - 1),
         ],
 
         // Non-existent field.
@@ -292,349 +172,76 @@ fn king_moves_unchecked(field: &Field, _board: &Board) -> Vec<Field> {
     }
 }
 
-fn queen_moves_unchecked(field: &Field, board: &Board) -> Vec<Field> {
+fn go_in_dir(field: &Field, board: &Board, we: i32, ns: i32) -> Vec<Field> {
     let mut moves: Vec<Field> = Vec::new();
-    let (file, row) = (field.file, field.row);
+    let (file, row) = (field.get_file(), field.get_row());
     let color = match board.field_content(&field) {
         Some(piece) => piece.color,
         None => Color::White, /* UB */
     };
 
     for i in 1..=8 {
-        let field = Field { file, row: row + i };
-        if !field.on_board() {
-            break;
-        }
+        if let Some(field) = Field::build(file as i32 + i * we, row as i32 + i * ns) {
+            let field_content = *board.field_content(&field);
 
-        let field_content = *board.field_content(&field);
+            if field_content == None {
+                moves.push(field);
+                continue;
+            }
 
-        if field_content == None {
-            moves.push(field);
-            continue;
-        }
-
-        if field_content.unwrap().color == color {
-            break;
-        } else {
-            moves.push(field);
-            break;
+            if field_content.unwrap().color == color {
+                break;
+            } else {
+                moves.push(field);
+                break;
+            }
         }
     }
 
-    for i in 1..=8 {
-        let field = Field {
-            file: file + i,
-            row: row + i,
-        };
-        if !field.on_board() {
-            break;
-        }
+    moves
+}
 
-        let field_content = *board.field_content(&field);
+fn queen_moves_unchecked(field: &Field, board: &Board) -> Vec<Field> {
+    let mut moves: Vec<Field> = Vec::new();
 
-        if field_content == None {
-            moves.push(field);
-            continue;
-        }
-
-        if field_content.unwrap().color == color {
-            break;
-        } else {
-            moves.push(field);
-            break;
-        }
-    }
-
-    for i in 1..=8 {
-        let field = Field { file, row: row - i };
-        if !field.on_board() {
-            break;
-        }
-
-        let field_content = *board.field_content(&field);
-
-        if field_content == None {
-            moves.push(field);
-            continue;
-        }
-
-        if field_content.unwrap().color == color {
-            break;
-        } else {
-            moves.push(field);
-            break;
-        }
-    }
-
-    for i in 1..=8 {
-        let field = Field {
-            file: file + i,
-            row: row - i,
-        };
-        if !field.on_board() {
-            break;
-        }
-
-        let field_content = *board.field_content(&field);
-
-        if field_content == None {
-            moves.push(field);
-            continue;
-        }
-
-        if field_content.unwrap().color == color {
-            break;
-        } else {
-            moves.push(field);
-            break;
-        }
-    }
-
-    for i in 1..=8 {
-        let field = Field {
-            file: file + i,
-            row,
-        };
-        if !field.on_board() {
-            break;
-        }
-
-        let field_content = *board.field_content(&field);
-
-        if field_content == None {
-            moves.push(field);
-            continue;
-        }
-
-        if field_content.unwrap().color == color {
-            break;
-        } else {
-            moves.push(field);
-            break;
-        }
-    }
-
-    for i in 1..=8 {
-        let field = Field {
-            file: file - i,
-            row: row - i,
-        };
-        if !field.on_board() {
-            break;
-        }
-
-        let field_content = *board.field_content(&field);
-
-        if field_content == None {
-            moves.push(field);
-            continue;
-        }
-
-        if field_content.unwrap().color == color {
-            break;
-        } else {
-            moves.push(field);
-            break;
-        }
-    }
-
-    for i in 1..=8 {
-        let field = Field {
-            file: file - i,
-            row: row,
-        };
-        if !field.on_board() {
-            break;
-        }
-
-        let field_content = *board.field_content(&field);
-
-        if field_content == None {
-            moves.push(field);
-            continue;
-        }
-
-        if field_content.unwrap().color == color {
-            break;
-        } else {
-            moves.push(field);
-            break;
-        }
-    }
-
-    for i in 1..=8 {
-        let field = Field {
-            file: file - i,
-            row: row + i,
-        };
-        if !field.on_board() {
-            break;
-        }
-
-        let field_content = *board.field_content(&field);
-
-        if field_content == None {
-            moves.push(field);
-            continue;
-        }
-
-        if field_content.unwrap().color == color {
-            break;
-        } else {
-            moves.push(field);
-            break;
-        }
-    }
+    moves.append(&mut go_in_dir(field, board, 1, 0));
+    moves.append(&mut go_in_dir(field, board, 1, 1));
+    moves.append(&mut go_in_dir(field, board, 1, -1));
+    moves.append(&mut go_in_dir(field, board, 0, 1));
+    moves.append(&mut go_in_dir(field, board, 0, -1));
+    moves.append(&mut go_in_dir(field, board, -1, 0));
+    moves.append(&mut go_in_dir(field, board, -1, 1));
+    moves.append(&mut go_in_dir(field, board, -1, -1));
 
     moves
 }
 
 fn bishop_moves_unchecked(field: &Field, board: &Board) -> Vec<Field> {
     let mut moves: Vec<Field> = Vec::new();
-    let (file, row) = (field.file, field.row);
-    let color = match board.field_content(&field) {
-        Some(piece) => piece.color,
-        None => Color::White, /* UB */
-    };
 
-    for i in 1..=8 {
-        let field = Field {
-            file: file + i,
-            row: row + i,
-        };
-        if !field.on_board() {
-            break;
-        }
-
-        let field_content = *board.field_content(&field);
-
-        if field_content == None {
-            moves.push(field);
-            continue;
-        }
-
-        if field_content.unwrap().color == color {
-            break;
-        } else {
-            moves.push(field);
-            break;
-        }
-    }
-
-    for i in 1..=8 {
-        let field = Field {
-            file: file - i,
-            row: row - i,
-        };
-        if !field.on_board() {
-            break;
-        }
-
-        let field_content = *board.field_content(&field);
-
-        if field_content == None {
-            moves.push(field);
-            continue;
-        }
-
-        if field_content.unwrap().color == color {
-            break;
-        } else {
-            moves.push(field);
-            break;
-        }
-    }
-
-    for i in 1..=8 {
-        let field = Field {
-            file: file + i,
-            row: row - i,
-        };
-        if !field.on_board() {
-            break;
-        }
-
-        let field_content = *board.field_content(&field);
-
-        if field_content == None {
-            moves.push(field);
-            continue;
-        }
-
-        if field_content.unwrap().color == color {
-            break;
-        } else {
-            moves.push(field);
-            break;
-        }
-    }
-
-    for i in 1..=8 {
-        let field = Field {
-            file: file - i,
-            row: row + i,
-        };
-        if !field.on_board() {
-            break;
-        }
-
-        let field_content = *board.field_content(&field);
-
-        if field_content == None {
-            moves.push(field);
-            continue;
-        }
-
-        if field_content.unwrap().color == color {
-            break;
-        } else {
-            moves.push(field);
-            break;
-        }
-    }
+    moves.append(&mut go_in_dir(field, board, 1, 1));
+    moves.append(&mut go_in_dir(field, board, -1, 1));
+    moves.append(&mut go_in_dir(field, board, -1, -1));
+    moves.append(&mut go_in_dir(field, board, 1, -1));
 
     moves
 }
 
 fn knight_moves_unchecked(field: &Field, _board: &Board) -> Vec<Field> {
     let to_filter = [
-        Field {
-            row: field.row - 1,
-            file: field.file - 2,
-        },
-        Field {
-            row: field.row - 2,
-            file: field.file - 1,
-        },
-        Field {
-            row: field.row - 2,
-            file: field.file + 1,
-        },
-        Field {
-            row: field.row - 1,
-            file: field.file + 2,
-        },
-        Field {
-            row: field.row + 1,
-            file: field.file + 2,
-        },
-        Field {
-            row: field.row + 2,
-            file: field.file + 1,
-        },
-        Field {
-            row: field.row + 2,
-            file: field.file - 1,
-        },
-        Field {
-            row: field.row + 1,
-            file: field.file - 2,
-        },
+        Field::build(field.get_row() as i32 - 1, field.get_file() as i32 - 2),
+        Field::build(field.get_row() as i32 - 2, field.get_file() as i32 - 1),
+        Field::build(field.get_row() as i32 - 2, field.get_file() as i32 + 1),
+        Field::build(field.get_row() as i32 - 1, field.get_file() as i32 + 2),
+        Field::build(field.get_row() as i32 + 1, field.get_file() as i32 + 2),
+        Field::build(field.get_row() as i32 + 2, field.get_file() as i32 + 1),
+        Field::build(field.get_row() as i32 + 2, field.get_file() as i32 - 1),
+        Field::build(field.get_row() as i32 + 1, field.get_file() as i32 - 2),
     ];
 
     let mut moves: Vec<Field> = Vec::new();
     for field in to_filter.into_iter() {
-        if field.on_board() {
+        if let Some(field) = field {
             moves.push(field);
         }
     }
@@ -644,101 +251,11 @@ fn knight_moves_unchecked(field: &Field, _board: &Board) -> Vec<Field> {
 
 fn rook_moves_unchecked(field: &Field, board: &Board) -> Vec<Field> {
     let mut moves: Vec<Field> = Vec::new();
-    let (file, row) = (field.file, field.row);
-    let color = match board.field_content(&field) {
-        Some(piece) => piece.color,
-        None => Color::White, /* UB */
-    };
 
-    for i in 1..=8 {
-        let field = Field { file, row: row + i };
-        if !field.on_board() {
-            break;
-        }
-
-        let field_content = *board.field_content(&field);
-
-        if field_content == None {
-            moves.push(field);
-            continue;
-        }
-
-        if field_content.unwrap().color == color {
-            break;
-        } else {
-            moves.push(field);
-            break;
-        }
-    }
-
-    for i in 1..=8 {
-        let field = Field { file, row: row - i };
-        if !field.on_board() {
-            break;
-        }
-
-        let field_content = *board.field_content(&field);
-
-        if field_content == None {
-            moves.push(field);
-            continue;
-        }
-
-        if field_content.unwrap().color == color {
-            break;
-        } else {
-            moves.push(field);
-            break;
-        }
-    }
-
-    for i in 1..=8 {
-        let field = Field {
-            file: file + i,
-            row,
-        };
-        if !field.on_board() {
-            break;
-        }
-
-        let field_content = *board.field_content(&field);
-
-        if field_content == None {
-            moves.push(field);
-            continue;
-        }
-
-        if field_content.unwrap().color == color {
-            break;
-        } else {
-            moves.push(field);
-            break;
-        }
-    }
-
-    for i in 1..=8 {
-        let field = Field {
-            file: file - i,
-            row,
-        };
-        if !field.on_board() {
-            break;
-        }
-
-        let field_content = *board.field_content(&field);
-
-        if field_content == None {
-            moves.push(field);
-            continue;
-        }
-
-        if field_content.unwrap().color == color {
-            break;
-        } else {
-            moves.push(field);
-            break;
-        }
-    }
+    moves.append(&mut go_in_dir(field, board, 1, 0));
+    moves.append(&mut go_in_dir(field, board, -1, 0));
+    moves.append(&mut go_in_dir(field, board, 0, 1));
+    moves.append(&mut go_in_dir(field, board, 0, -1));
 
     moves
 }
@@ -751,68 +268,57 @@ fn pawn_moves_unchecked(field: &Field, board: &Board) -> Vec<Field> {
     };
 
     let next_row = match color {
-        Color::White => field.row + 1,
-        Color::Black => field.row - 1,
+        Color::White => field.get_row() + 1,
+        Color::Black => field.get_row() - 1,
     };
 
-    let next_field = Field {
-        row: next_row,
-        file: field.file,
-    };
+    let next_field = Field::build_unchecked(next_row, field.get_file());
     if *board.field_content(&next_field) == None {
         moves.push(next_field);
     }
 
-    let nw_field = Field {
-        row: next_row,
-        file: field.file - 1,
-    };
-    if nw_field.on_board() {
-        if let Some(piece) = *board.field_content(&nw_field) {
+    let nw_field = Field::build(next_row as i32, field.get_file() as i32 - 1);
+    if let Some(field) = nw_field {
+        if let Some(piece) = *board.field_content(&field) {
             if piece.color != color {
-                moves.push(nw_field);
+                moves.push(field);
             }
         }
     }
 
-    let ne_field = Field {
-        row: next_row,
-        file: field.file + 1,
-    };
-    if ne_field.on_board() {
-        if let Some(piece) = *board.field_content(&ne_field) {
+    let ne_field = Field::build(next_row as i32, field.get_file() as i32 + 1);
+    if let Some(field) = ne_field {
+        if let Some(piece) = *board.field_content(&field) {
             if piece.color != color {
-                moves.push(ne_field);
+                moves.push(field);
             }
         }
     }
 
-    let e_field = Field {
-        row: field.row,
-        file: field.file + 1,
-    };
-    if e_field.on_board()
-        && board.can_en_passant(field.file + 1)
-        && ((color == Color::White && field.row == 5) || (color == Color::Black && field.row == 4))
-    {
-        if let Some(piece) = *board.field_content(&e_field) {
-            if piece.color != color {
-                moves.push(e_field);
+    let e_field = Field::build(field.get_row() as i32, field.get_file() as i32 + 1);
+    if let Some(field) = e_field {
+        if board.can_en_passant(field.get_file() + 1)
+            && ((color == Color::White && field.get_row() == 5)
+                || (color == Color::Black && field.get_row() == 4))
+        {
+            if let Some(piece) = *board.field_content(&field) {
+                if piece.color != color {
+                    moves.push(field);
+                }
             }
         }
     }
 
-    let w_field = Field {
-        row: field.row,
-        file: field.file - 1,
-    };
-    if w_field.on_board()
-        && board.can_en_passant(field.file - 1)
-        && ((color == Color::White && field.row == 5) || (color == Color::Black && field.row == 4))
-    {
-        if let Some(piece) = *board.field_content(&w_field) {
-            if piece.color != color {
-                moves.push(w_field);
+    let w_field = Field::build(field.get_row() as i32, field.get_file() as i32 - 1);
+    if let Some(field) = w_field {
+        if board.can_en_passant(field.get_file() - 1)
+            && ((color == Color::White && field.get_row() == 5)
+                || (color == Color::Black && field.get_row() == 4))
+        {
+            if let Some(piece) = *board.field_content(&field) {
+                if piece.color != color {
+                    moves.push(field);
+                }
             }
         }
     }
