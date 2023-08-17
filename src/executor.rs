@@ -80,7 +80,7 @@ pub async fn executor(rx: mpsc::Receiver<String>) {
             },
             "go" => {
                 // TODO: Graj otwarcie z książki.
-                unimplemented!();
+                println!("bestmove e2e4");
             },
             _ => unreachable!(),
         }
