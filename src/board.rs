@@ -544,12 +544,12 @@ impl std::convert::TryFrom<FENString> for Board {
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Field {
-    file: u8,
     row: u8,
+    file: u8,
 }
 
 impl Field {
-    pub fn build_unchecked(file: u8, row: u8) -> Self {
+    pub fn build_unchecked(row: u8, file: u8) -> Self {
         match (file, row) {
             (1..=8, 1..=8) => Field {
                 file: file as u8,
@@ -559,7 +559,7 @@ impl Field {
         }
     }
 
-    pub fn build(file: i32, row: i32) -> Option<Self> {
+    pub fn build(row: i32, file: i32) -> Option<Self> {
         match (file, row) {
             (1..=8, 1..=8) => Some(Field {
                 file: file as u8,
