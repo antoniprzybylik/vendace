@@ -2,9 +2,11 @@ use std::sync::mpsc;
 
 use super::board::Board;
 use super::board::FENString;
-use super::book::Move;
 use super::book::Book;
 use super::book::BookEntry;
+use super::book::Move;
+
+use super::moves::player_moves;
 
 lazy_static! {
     static ref BOOK: Book = Book::load("/usr/share/gnuchess/smallbook.bin").unwrap();
@@ -30,13 +32,12 @@ pub async fn executor(rx: mpsc::Receiver<String>) {
                                 break;
                             }
 
-                            let fs = match FENString::try_from(tokens[i+1..=i+4]
-                                                               .to_vec()) {
+                            let fs = match FENString::try_from(tokens[i + 1..=i + 4].to_vec()) {
                                 Ok(fs) => fs,
                                 Err(()) => {
                                     println!("Error: Malformed fenstring.");
                                     break;
-                                },
+                                }
                             };
 
                             // Przesuwamy iterator za fenstring.
@@ -47,10 +48,10 @@ pub async fn executor(rx: mpsc::Receiver<String>) {
                                 Err(()) => {
                                     println!("Error: Malformed fenstring.");
                                     break;
-                                },
+                                }
                             };
                             pos_set = true;
-                        },
+                        }
                         "startpos" => {
                             if pos_set || mov_set {
                                 println!("Error: Malformed `position` command string.");
@@ -59,7 +60,7 @@ pub async fn executor(rx: mpsc::Receiver<String>) {
 
                             board = Board::new();
                             pos_set = true;
-                        },
+                        }
                         "moves" => {
                             i += 1;
                             while i < tokens.len() {
@@ -70,21 +71,22 @@ pub async fn executor(rx: mpsc::Receiver<String>) {
                                     Err(()) => {
                                         println!("Invalid move in `position` command string.");
                                         break 'parse_commands;
-                                    },
+                                    }
                                 };
 
                                 board.apply_unchecked(&r#move);
+                                board.next_turn();
                                 i += 1;
                             }
 
                             mov_set = true;
-                        },
-                        _ => {},
+                        }
+                        _ => {}
                     }
 
                     i += 1;
                 }
-            },
+            }
             "go" => {
                 // TODO: Zwracaj uwagę na parametry.
 
@@ -98,9 +100,16 @@ pub async fn executor(rx: mpsc::Receiver<String>) {
 
                     println!("bestmove {}", Move::try_from(best_move).unwrap());
                 } else {
-                    // TODO: Losowe ruchy.
+                    let moves = player_moves(&board.which_turn(), &board);
+
+                    if moves.len() == 0 {
+                        // FIXME
+                        unimplemented!();
+                    } else {
+                        println!("bestmove {}", moves[0]);
+                    }
                 }
-            },
+            }
             _ => unreachable!(),
         }
     }

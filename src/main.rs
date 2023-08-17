@@ -1,6 +1,6 @@
+use std::fs::File;
 use std::io::{self, Write};
 use std::sync::mpsc;
-use std::fs::File;
 
 use vendace::executor::executor;
 
@@ -27,39 +27,43 @@ async fn main() {
 
         match first_token {
             "help" => {
-                println!("\nVendace is a chess engine for playing and analyzing.\n\
+                println!(
+                    "\nVendace is a chess engine for playing and analyzing.\n\
                             It is released as free software licensed under the \n\
                             GNU GPLv3 License. Vendace is normally used with a\n\
                             graphical user interface (GUI) and implements the\n\
                             Universal Chess Interface (UCI) protocol to communicate\n\
-                            with a GUI, an API, etc.\n");
-            },
+                            with a GUI, an API, etc.\n"
+                );
+            }
             "isready" => {
                 println!("readyok");
-            },
+            }
             "ucinewgame" => {
                 // Do nothing.
-            },
+            }
             "uci" => {
                 // TODO: Print engine options.
                 println!("uciok");
-            },
+            }
             "position" => {
                 tx.send(input).unwrap();
-            },
+            }
             "go" => {
                 tx.send(input).unwrap();
-            },
+            }
             "quit" => {
                 std::process::exit(0);
-            },
+            }
             "stop" => {
                 // TODO: Stop executor thread.
-            },
+            }
             _ => {
-                println!("Unknown command: '{}'. Type help for more information.",
-                         input);
-            },
+                println!(
+                    "Unknown command: '{}'. Type help for more information.",
+                    input
+                );
+            }
         }
     }
 }

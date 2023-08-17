@@ -1,11 +1,11 @@
-use std::fmt;
 use std::cmp;
+use std::fmt;
 
+use super::book::Move;
 use super::polyglot_data::RANDOM_CASTLE;
 use super::polyglot_data::RANDOM_EN_PASSANT;
 use super::polyglot_data::RANDOM_PIECE;
 use super::polyglot_data::RANDOM_TURN;
-use super::book::Move;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum KindOfPiece {
@@ -19,14 +19,18 @@ pub enum KindOfPiece {
 
 impl fmt::Display for KindOfPiece {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", match self {
-             KindOfPiece::Pawn => "Pawn",
-             KindOfPiece::Knight => "Knight",
-             KindOfPiece::Bishop => "Bishop",
-             KindOfPiece::Rook => "Rook",
-             KindOfPiece::Queen => "Queen",
-             KindOfPiece::King => "King",
-        })
+        write!(
+            f,
+            "{}",
+            match self {
+                KindOfPiece::Pawn => "Pawn",
+                KindOfPiece::Knight => "Knight",
+                KindOfPiece::Bishop => "Bishop",
+                KindOfPiece::Rook => "Rook",
+                KindOfPiece::Queen => "Queen",
+                KindOfPiece::King => "King",
+            }
+        )
     }
 }
 
@@ -34,6 +38,15 @@ impl fmt::Display for KindOfPiece {
 pub enum Color {
     White,
     Black,
+}
+
+impl Color {
+    pub fn enemy(&self) -> Self {
+        match self {
+            Color::White => Color::Black,
+            Color::Black => Color::White,
+        }
+    }
 }
 
 #[derive(Copy, Clone)]
@@ -44,8 +57,8 @@ pub enum Castle {
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Piece {
-    kind_of_piece: KindOfPiece,
-    color: Color,
+    pub kind_of_piece: KindOfPiece,
+    pub color: Color,
 }
 
 const WHITE_ROOK: Piece = Piece {
@@ -115,7 +128,7 @@ impl Piece {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Board {
     fields: [[Option<Piece>; 8]; 8],
     castle: [bool; 4],
@@ -226,26 +239,177 @@ impl Board {
 
     /// Can a pawn in file `file` be captured en passant.
     pub fn can_en_passant(&self, file: u8) -> bool {
-        self.en_passant[file as usize]
+        self.en_passant[(file - 1) as usize]
     }
 
     /// Apply move without performing checks.
     pub fn apply_unchecked(&mut self, r#move: &Move) {
-        let piece = self.fields[(r#move.from_row()-1) as usize][(r#move.from_file_number()-1) as usize];
+        let field_content =
+            self.fields[(r#move.from_row() - 1) as usize][(r#move.from_file_number() - 1) as usize];
 
-        self.fields[(r#move.from_row()-1) as usize][(r#move.from_file_number()-1) as usize] = None;
+        self.fields[(r#move.from_row() - 1) as usize][(r#move.from_file_number() - 1) as usize] =
+            None;
 
         if let Some(piece_kind) = r#move.promotion() {
-            self.fields[(r#move.to_row()-1) as usize][(r#move.to_file_number()-1) as usize] =
+            self.fields[(r#move.to_row() - 1) as usize][(r#move.to_file_number() - 1) as usize] =
                 Some(Piece {
                     kind_of_piece: piece_kind,
-                    color: if let Some(piece) = piece { piece.color } else { panic!("Failed to apply move.") },
+                    color: if let Some(piece) = field_content {
+                        piece.color
+                    } else {
+                        panic!("Failed to apply move.")
+                    },
                 });
         } else {
-            self.fields[(r#move.to_row()-1) as usize][(r#move.to_file_number()-1) as usize] = piece;
+            self.fields[(r#move.to_row() - 1) as usize][(r#move.to_file_number() - 1) as usize] =
+                field_content;
+        }
+
+        if let Some(piece) = field_content {
+            // Krótka roszada.
+            // Przesuwamy wieżę.
+            if piece.kind_of_piece == KindOfPiece::King
+                && r#move.from_file_number() == 5
+                && r#move.to_file_number() == 7
+            {
+                self.fields[(r#move.from_row() - 1) as usize][7] = None;
+                self.fields[(r#move.from_row() - 1) as usize][5] = Some(Piece {
+                    kind_of_piece: KindOfPiece::Rook,
+                    color: piece.color,
+                });
+            }
+
+            // Długa roszada.
+            // Przesuwamy wieżę.
+            if piece.kind_of_piece == KindOfPiece::King
+                && r#move.from_file_number() == 5
+                && r#move.to_file_number() == 3
+            {
+                self.fields[(r#move.from_row() - 1) as usize][0] = None;
+                self.fields[(r#move.from_row() - 1) as usize][3] = Some(Piece {
+                    kind_of_piece: KindOfPiece::Rook,
+                    color: piece.color,
+                });
+            }
+
+            // Jeżeli ruszył się król:
+            // Unieważniamy roszady tego
+            // koloru.
+            if piece.kind_of_piece == KindOfPiece::King {
+                match piece.color {
+                    Color::White => {
+                        self.castle[0] = false;
+                        self.castle[1] = false;
+                    }
+                    Color::Black => {
+                        self.castle[2] = false;
+                        self.castle[3] = false;
+                    }
+                }
+            }
+
+            // Biały bije przelotem.
+            if piece.color == Color::White
+                && self.en_passant[(r#move.to_file_number() - 1) as usize]
+                && r#move.to_row() == 6
+            {
+                let above_content = &mut self.fields[(r#move.to_row() - 2) as usize]
+                    [(r#move.to_file_number() - 1) as usize];
+                if let Some(piece) = above_content {
+                    if *piece
+                        == (Piece {
+                            kind_of_piece: KindOfPiece::Pawn,
+                            color: Color::Black,
+                        })
+                    {
+                        *above_content = None;
+                    }
+                }
+            }
+
+            // Czarny bije przelotem.
+            if piece.color == Color::Black
+                && self.en_passant[(r#move.to_file_number() - 1) as usize]
+                && r#move.to_row() == 3
+            {
+                let under_content = &mut self.fields[(r#move.to_row()) as usize]
+                    [(r#move.to_file_number() - 1) as usize];
+                if let Some(piece) = under_content {
+                    if *piece
+                        == (Piece {
+                            kind_of_piece: KindOfPiece::Pawn,
+                            color: Color::White,
+                        })
+                    {
+                        *under_content = None;
+                    }
+                }
+            }
+
+            // Unieważniamy możliwe bicia przelotem z poprzedniej rundy.
+            self.en_passant = [false; 8];
+
+            // Biały może być zbity przelotem.
+            if piece.color == Color::White && r#move.to_row() == 4 {
+                if (r#move.to_file_number() == 1
+                    || self.fields[(r#move.to_row() - 1) as usize]
+                        [(r#move.to_file_number() - 2) as usize]
+                        == Some(Piece {
+                            kind_of_piece: KindOfPiece::Pawn,
+                            color: Color::Black,
+                        }))
+                    && (r#move.to_file_number() == 8
+                        || self.fields[(r#move.to_row() - 1) as usize]
+                            [(r#move.to_file_number()) as usize]
+                            == Some(Piece {
+                                kind_of_piece: KindOfPiece::Pawn,
+                                color: Color::Black,
+                            }))
+                {
+                    self.en_passant[(r#move.to_file_number() - 1) as usize] = true;
+                }
+            }
+
+            // Czarny może być zbity przelotem.
+            if piece.color == Color::Black && r#move.to_row() == 5 {
+                if (r#move.to_file_number() == 1
+                    || self.fields[(r#move.to_row() - 1) as usize]
+                        [(r#move.to_file_number() - 2) as usize]
+                        == Some(Piece {
+                            kind_of_piece: KindOfPiece::Pawn,
+                            color: Color::White,
+                        }))
+                    && (r#move.to_file_number() == 8
+                        || self.fields[(r#move.to_row() - 1) as usize]
+                            [(r#move.to_file_number()) as usize]
+                            == Some(Piece {
+                                kind_of_piece: KindOfPiece::Pawn,
+                                color: Color::White,
+                            }))
+                {
+                    self.en_passant[(r#move.to_file_number() - 1) as usize] = true;
+                }
+            }
         }
     }
+
+    /// Content of field `field`.
+    pub fn field_content(&self, field: &Field) -> &Option<Piece> {
+        &self.fields[(field.row - 1) as usize][(field.file - 1) as usize]
+    }
+
+    /// Which turn.
+    pub fn which_turn(&self) -> Color {
+        self.turn
+    }
+
+    /// Next turn.
+    pub fn next_turn(&mut self) {
+        self.turn = self.turn.enemy();
+    }
 }
+
+// TODO: Test apply_unchecked()
 
 impl std::convert::TryFrom<FENString> for Board {
     type Error = ();
@@ -271,55 +435,55 @@ impl std::convert::TryFrom<FENString> for Board {
                             fields[i][j] = None;
                         }
                         pos += num as usize;
-                    },
+                    }
                     b'p' => {
                         fields[i][pos] = Some(BLACK_PAWN);
                         pos += 1;
-                    },
+                    }
                     b'P' => {
                         fields[i][pos] = Some(WHITE_PAWN);
-                        pos+= 1;
-                    },
+                        pos += 1;
+                    }
                     b'r' => {
                         fields[i][pos] = Some(BLACK_ROOK);
-                        pos+= 1;
-                    },
+                        pos += 1;
+                    }
                     b'R' => {
                         fields[i][pos] = Some(WHITE_ROOK);
-                        pos+= 1;
-                    },
+                        pos += 1;
+                    }
                     b'n' => {
                         fields[i][pos] = Some(BLACK_KNIGHT);
-                        pos+= 1;
-                    },
+                        pos += 1;
+                    }
                     b'N' => {
                         fields[i][pos] = Some(WHITE_KNIGHT);
-                        pos+= 1;
-                    },
+                        pos += 1;
+                    }
                     b'b' => {
                         fields[i][pos] = Some(BLACK_BISHOP);
-                        pos+= 1;
-                    },
+                        pos += 1;
+                    }
                     b'B' => {
                         fields[i][pos] = Some(WHITE_BISHOP);
-                        pos+= 1;
-                    },
+                        pos += 1;
+                    }
                     b'q' => {
                         fields[i][pos] = Some(BLACK_QUEEN);
-                        pos+= 1;
-                    },
+                        pos += 1;
+                    }
                     b'Q' => {
                         fields[i][pos] = Some(WHITE_QUEEN);
-                        pos+= 1;
-                    },
+                        pos += 1;
+                    }
                     b'k' => {
                         fields[i][pos] = Some(BLACK_KING);
-                        pos+= 1;
-                    },
+                        pos += 1;
+                    }
                     b'K' => {
                         fields[i][pos] = Some(WHITE_KING);
-                        pos+= 1;
-                    },
+                        pos += 1;
+                    }
                     _ => return Err(()),
                 }
             }
@@ -337,11 +501,19 @@ impl std::convert::TryFrom<FENString> for Board {
 
         for p in f.castle {
             match p {
-                b'A' => { castle[0] = true; },
-                b'H' => { castle[1] = true; },
-                b'a' => { castle[2] = true; },
-                b'h' => { castle[3] = true; },
-                b'-' => {},
+                b'A' => {
+                    castle[0] = true;
+                }
+                b'H' => {
+                    castle[1] = true;
+                }
+                b'a' => {
+                    castle[2] = true;
+                }
+                b'h' => {
+                    castle[3] = true;
+                }
+                b'-' => {}
                 _ => return Err(()),
             };
         }
@@ -357,7 +529,7 @@ impl std::convert::TryFrom<FENString> for Board {
                     return Err(());
                 }
 
-                en_passant[(field.file-1) as usize] = true;
+                en_passant[(field.file - 1) as usize] = true;
             }
         }
 
@@ -370,10 +542,19 @@ impl std::convert::TryFrom<FENString> for Board {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Field {
     pub file: u8,
     pub row: u8,
+}
+
+impl Field {
+    pub fn on_board(&self) -> bool {
+        match (self.file, self.row) {
+            (1..=8, 1..=8) => true,
+            _ => false,
+        }
+    }
 }
 
 impl std::convert::TryFrom<&str> for Field {
@@ -385,26 +566,21 @@ impl std::convert::TryFrom<&str> for Field {
             return Err(());
         }
 
-        let file: u8 = if pos[0] >= b'a' &&
-           pos[0] <= b'h' {
+        let file: u8 = if pos[0] >= b'a' && pos[0] <= b'h' {
             pos[0] - b'a' + 1
         } else if pos[0] >= b'A' && pos[0] <= b'H' {
             pos[0] - b'A' + 1
         } else {
-            return Err(())
+            return Err(());
         };
 
-        let row: u8 = if pos[1] >= b'1' &&
-            pos[1] <= b'8' {
-                pos[1] - b'0'
+        let row: u8 = if pos[1] >= b'1' && pos[1] <= b'8' {
+            pos[1] - b'0'
         } else {
-            return Err(())
+            return Err(());
         };
 
-        Ok(Field {
-            file,
-            row,
-        })
+        Ok(Field { file, row })
     }
 }
 
@@ -450,9 +626,8 @@ impl std::convert::TryFrom<Vec<&str>> for FENString {
     type Error = ();
 
     fn try_from(tokens: Vec<&str>) -> Result<Self, Self::Error> {
-        if tokens.len() < 4 ||
-           tokens.len() > 6 {
-               return Err(());
+        if tokens.len() < 4 || tokens.len() > 6 {
+            return Err(());
         }
 
         let rows = tokens[0].split('/').collect::<Vec<&str>>();
@@ -471,10 +646,12 @@ impl std::convert::TryFrom<Vec<&str>> for FENString {
         }
 
         Ok(FENString {
-            rows: rows.into_iter()
+            rows: rows
+                .into_iter()
                 .map(ToOwned::to_owned)
                 .collect::<Vec<String>>()
-                .try_into().unwrap(),
+                .try_into()
+                .unwrap(),
             turn: turn[0],
             castle: castle.try_into().unwrap(),
             en_passant: tokens[3].to_owned(),

@@ -1,14 +1,14 @@
 use std::collections::HashMap;
 use std::error::Error;
+use std::fmt;
 use std::fs::File;
 use std::ops::{Deref, DerefMut};
 use std::path::Path;
-use std::fmt;
 
 use std::io::prelude::*;
 
-use super::board::KindOfPiece;
 use super::board::Field;
+use super::board::KindOfPiece;
 
 struct BookFileEntry {
     key: u64,
@@ -75,12 +75,10 @@ impl Book {
                 book.insert(entry.key, Vec::new());
             }
 
-            book.get_mut(&entry.key).unwrap().push(
-                BookEntry {
-                    r#move: entry.r#move,
-                    weight: entry.weight,
-                },
-            );
+            book.get_mut(&entry.key).unwrap().push(BookEntry {
+                r#move: entry.r#move,
+                weight: entry.weight,
+            });
         }
 
         Some(book)
@@ -97,7 +95,7 @@ impl Move {
 
     pub fn from_file(&self) -> char {
         const ALPHABET: [char; 8] = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-        char::from(ALPHABET[(self.from_file_number()-1) as usize])
+        char::from(ALPHABET[(self.from_file_number() - 1) as usize])
     }
 
     pub fn from_row(&self) -> u8 {
@@ -117,7 +115,7 @@ impl Move {
 
     pub fn to_file(&self) -> char {
         const ALPHABET: [char; 8] = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-        char::from(ALPHABET[(self.to_file_number()-1) as usize])
+        char::from(ALPHABET[(self.to_file_number() - 1) as usize])
     }
 
     pub fn to_row(&self) -> u8 {
@@ -145,10 +143,10 @@ impl Move {
     pub fn build(f1: Field, f2: Field, piece: Option<KindOfPiece>) -> Result<Self, ()> {
         let mut code: u16 = 0;
 
-        code |= (f2.file-1) as u16;
-        code |= ((f2.row-1) as u16) << 3;
-        code |= ((f1.file-1) as u16) << 6;
-        code |= ((f1.row-1) as u16) << 9;
+        code |= (f2.file - 1) as u16;
+        code |= ((f2.row - 1) as u16) << 3;
+        code |= ((f1.file - 1) as u16) << 6;
+        code |= ((f1.row - 1) as u16) << 9;
 
         code |= match piece {
             None => 0,
@@ -183,8 +181,7 @@ impl std::convert::TryFrom<&str> for Move {
     type Error = ();
 
     fn try_from(s: &str) -> Result<Self, Self::Error> {
-        if s.len() != 4 &&
-           s.len() != 5 {
+        if s.len() != 4 && s.len() != 5 {
             return Err(());
         }
 
@@ -205,10 +202,10 @@ impl std::convert::TryFrom<&str> for Move {
 
         let piece: Option<KindOfPiece> = match m {
             "" => None,
-            "q" => Some(KindOfPiece::Queen), 
-            "b" => Some(KindOfPiece::Bishop), 
-            "n" => Some(KindOfPiece::Knight), 
-            "r" => Some(KindOfPiece::Rook), 
+            "q" => Some(KindOfPiece::Queen),
+            "b" => Some(KindOfPiece::Bishop),
+            "n" => Some(KindOfPiece::Knight),
+            "r" => Some(KindOfPiece::Rook),
             _ => return Err(()),
         };
 
@@ -219,17 +216,24 @@ impl std::convert::TryFrom<&str> for Move {
 impl fmt::Display for Move {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if let Some(piece) = self.promotion() {
-            write!(f, "{}{}{}{}{}",
-                   self.from_file(),
-                   self.from_row(),
-                   self.to_file(),
-                   self.to_row(), piece)
+            write!(
+                f,
+                "{}{}{}{}{}",
+                self.from_file(),
+                self.from_row(),
+                self.to_file(),
+                self.to_row(),
+                piece
+            )
         } else {
-            write!(f, "{}{}{}{}",
-                   self.from_file(),
-                   self.from_row(),
-                   self.to_file(),
-                   self.to_row())
+            write!(
+                f,
+                "{}{}{}{}",
+                self.from_file(),
+                self.from_row(),
+                self.to_file(),
+                self.to_row()
+            )
         }
     }
 }
@@ -252,8 +256,6 @@ fn test_move() {
     assert_eq!(m.to_row(), 4);
     assert_eq!(m.promotion(), None);
 
-    assert_eq!(Move::try_from(0x031Cu16),
-               Move::try_from("e2e4"));
-    assert_eq!(Move::try_from(0x4D3Cu16),
-               Move::try_from("e7e8q"));
+    assert_eq!(Move::try_from(0x031Cu16), Move::try_from("e2e4"));
+    assert_eq!(Move::try_from(0x4D3Cu16), Move::try_from("e7e8q"));
 }
