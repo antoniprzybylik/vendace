@@ -13,7 +13,7 @@ lazy_static! {
     static ref BOOK: Book = Book::load("/usr/share/gnuchess/smallbook.bin").unwrap();
 }
 
-pub async fn executor(rx: mpsc::Receiver<String>) {
+pub fn executor(rx: mpsc::Receiver<String>) {
     let mut board: Board = Board::new();
 
     for cmd in rx.iter() {

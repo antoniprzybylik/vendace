@@ -5,14 +5,13 @@ use std::sync::mpsc;
 use vendace::executor::executor;
 use vendace::moves::STOP_ALL_THREADS;
 
-#[tokio::main]
-async fn main() {
+fn main() {
     println!("Vendace 1.0.0 by Antoni Przybylik");
 
     let mut logfile = File::create("/tmp/VENDACE_LOG").unwrap();
 
     let (tx, rx) = mpsc::channel::<String>();
-    tokio::spawn(executor(rx));
+    std::thread::spawn(|| { executor(rx) });
 
     loop {
         let mut input = String::new();
