@@ -122,6 +122,7 @@ fn minimax_single_thread(board: &Board, turn: &Color, depth: u8) -> (Move, i32) 
     for r#move in moves_to_consider.into_iter() {
         let mut cloned_board = *board;
         cloned_board.apply_unchecked(&r#move);
+        cloned_board.next_turn();
 
         rated_moves.push((r#move,
                           minimax_single_thread(&cloned_board,
