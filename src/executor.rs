@@ -118,7 +118,7 @@ pub fn executor(rx: mpsc::Receiver<String>) {
                                 }
 
                                 if let Ok(time) = FromStr::from_str(tokens[i + 1]) {
-                                    my_time = time;
+                                    my_time = std::cmp::min(my_time, time);
                                 } else {
                                     // FIXME: Malformed command error.
                                     break;
@@ -133,7 +133,7 @@ pub fn executor(rx: mpsc::Receiver<String>) {
                                 }
 
                                 if let Ok(time) = FromStr::from_str(tokens[i + 1]) {
-                                    my_time = time;
+                                    my_time = std::cmp::min(my_time, time);
                                 } else {
                                     // FIXME: Malformed command error.
                                     break;
