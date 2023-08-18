@@ -1,4 +1,5 @@
 use std::sync::atomic::AtomicBool;
+use std::sync::atomic::Ordering;
 
 use super::board::Board;
 use super::board::Color;
@@ -96,14 +97,26 @@ fn possible_moves(field: &Field, board: &Board) -> Vec<Move> {
 }
 
 pub fn get_move(board: &Board, turn: &Color) -> Move {
-    let (r#move, _) = minimax_multithreaded(board, turn, 4);
+    let mut r#move: Option<Move> = None;
 
-    r#move
+    for depth in 2..100 {
+        r#move = match minimax_multithreaded(board, turn, depth) {
+            (Some(r#move), _) => Some(r#move),
+            _ => break,
+        };
+    }
+
+    r#move.unwrap()
 }
 
 pub static mut STOP_ALL_THREADS: AtomicBool = AtomicBool::new(true);
 
-fn minimax_multithreaded(board: &Board, turn: &Color, depth: u8) -> (Move, i32) {
+fn minimax_multithreaded(board: &Board, turn: &Color, depth: u8) -> (Option<Move>, i32) {
+    // Forced stop.
+    if unsafe { STOP_ALL_THREADS.load(Ordering::SeqCst) } == true {
+        return (None, 0);
+    }
+
     if depth < 4 {
         return minimax_single_thread(board, turn, depth);
     }
@@ -113,8 +126,13 @@ fn minimax_multithreaded(board: &Board, turn: &Color, depth: u8) -> (Move, i32) 
         let mut cloned_board = *board;
         cloned_board.apply_unchecked(&r#move);
         cloned_board.next_turn();
+    
+        // Forced stop.
+        if unsafe { STOP_ALL_THREADS.load(Ordering::SeqCst) } == true {
+            return (None, 0);
+        }
 
-        (*r#move,
+        (Some(*r#move),
          -minimax_multithreaded(&cloned_board,
                                 &turn.enemy(),
                                 depth - 1).1)
@@ -125,21 +143,28 @@ fn minimax_multithreaded(board: &Board, turn: &Color, depth: u8) -> (Move, i32) 
             move2
         }
     }).unwrap();
+    
+    // Forced stop.
+    if unsafe { STOP_ALL_THREADS.load(Ordering::SeqCst) } == true {
+        return (None, 0);
+    }
 
     best_move
 }
 
-fn minimax_single_thread(board: &Board, turn: &Color, depth: u8) -> (Move, i32) {
+fn minimax_single_thread(board: &Board, turn: &Color, depth: u8) -> (Option<Move>, i32) {
+    // Forced stop.
+    if unsafe { STOP_ALL_THREADS.load(Ordering::SeqCst) } == true {
+        return (None, 0);
+    }
+
     if depth == 0 {
         let quality = board.eval();
 
-        // Zwracamy niepoprawny ruch, ale to nie ma
-        // znaczenia, bo depth powinna być co najmniej
-        // 1 przy użyciu z zewnątrz.
         if *turn == Color::White {
-            return (Move::try_from(0).unwrap(), quality);
+            return (None, quality);
         } else {
-            return (Move::try_from(0).unwrap(), -quality);
+            return (None, -quality);
         }
     }
 
@@ -156,6 +181,11 @@ fn minimax_single_thread(board: &Board, turn: &Color, depth: u8) -> (Move, i32) 
                                                  depth - 1).1));
     }
 
+    // Forced stop.
+    if unsafe { STOP_ALL_THREADS.load(Ordering::SeqCst) } == true {
+        return (None, 0);
+    }
+
     if rated_moves.len() == 0 {
         // FIXME
         panic!();
@@ -168,7 +198,7 @@ fn minimax_single_thread(board: &Board, turn: &Color, depth: u8) -> (Move, i32) 
         }
     }
 
-    best_move
+    (Some(best_move.0), best_move.1)
 }
 
 fn player_moves(color: &Color, board: &Board) -> Vec<Move> {
