@@ -76,7 +76,8 @@ fn possible_moves(field: &Field, board: &Board) -> Vec<Move> {
             && (target_field.get_row() == 1 || target_field.get_row() == 8)
         {
             moves.push(Move::build(field.clone(), target_field, Some(KindOfPiece::Queen)).unwrap());
-            moves.push(Move::build(field.clone(), target_field, Some(KindOfPiece::Knight)).unwrap());
+            moves
+                .push(Move::build(field.clone(), target_field, Some(KindOfPiece::Knight)).unwrap());
             // Nie ma co rozważać wieży i gońca bo nie dają nic więcej od hetmana.
         } else {
             moves.push(Move::build(field.clone(), target_field, None).unwrap());
@@ -122,28 +123,26 @@ fn minimax_multithreaded(board: &Board, turn: &Color, depth: u8) -> (Option<Move
     }
 
     let moves_to_consider: Vec<Move> = player_moves(turn, board);
-    let best_move = moves_to_consider.par_iter().map(|r#move| {
-        let mut cloned_board = *board;
-        cloned_board.apply_unchecked(&r#move);
-        cloned_board.next_turn();
-    
-        // Forced stop.
-        if unsafe { STOP_ALL_THREADS.load(Ordering::SeqCst) } == true {
-            return (None, 0);
-        }
+    let best_move = moves_to_consider
+        .par_iter()
+        .map(|r#move| {
+            let mut cloned_board = *board;
+            cloned_board.apply_unchecked(&r#move);
+            cloned_board.next_turn();
 
-        (Some(*r#move),
-         -minimax_multithreaded(&cloned_board,
-                                &turn.enemy(),
-                                depth - 1).1)
-    }).reduce_with(|move1, move2| {
-        if move1.1 > move2.1 {
-            move1
-        } else {
-            move2
-        }
-    }).unwrap();
-    
+            // Forced stop.
+            if unsafe { STOP_ALL_THREADS.load(Ordering::SeqCst) } == true {
+                return (None, 0);
+            }
+
+            (
+                Some(*r#move),
+                -minimax_multithreaded(&cloned_board, &turn.enemy(), depth - 1).1,
+            )
+        })
+        .reduce_with(|move1, move2| if move1.1 > move2.1 { move1 } else { move2 })
+        .unwrap();
+
     // Forced stop.
     if unsafe { STOP_ALL_THREADS.load(Ordering::SeqCst) } == true {
         return (None, 0);
@@ -175,10 +174,10 @@ fn minimax_single_thread(board: &Board, turn: &Color, depth: u8) -> (Option<Move
         cloned_board.apply_unchecked(&r#move);
         cloned_board.next_turn();
 
-        rated_moves.push((r#move,
-                          -minimax_single_thread(&cloned_board,
-                                                 &turn.enemy(),
-                                                 depth - 1).1));
+        rated_moves.push((
+            r#move,
+            -minimax_single_thread(&cloned_board, &turn.enemy(), depth - 1).1,
+        ));
     }
 
     // Forced stop.

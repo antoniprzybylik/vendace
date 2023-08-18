@@ -11,7 +11,7 @@ fn main() {
     let mut logfile = File::create("/tmp/VENDACE_LOG").unwrap();
 
     let (tx, rx) = mpsc::channel::<String>();
-    std::thread::spawn(|| { executor(rx) });
+    std::thread::spawn(|| executor(rx));
 
     loop {
         let mut input = String::new();
@@ -62,9 +62,9 @@ fn main() {
             "quit" => {
                 std::process::exit(0);
             }
-            "stop" => {
-                unsafe { *STOP_ALL_THREADS.get_mut() = true; }
-            }
+            "stop" => unsafe {
+                *STOP_ALL_THREADS.get_mut() = true;
+            },
             _ => {
                 println!(
                     "Unknown command: '{}'. Type help for more information.",
