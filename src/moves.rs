@@ -125,9 +125,9 @@ fn minimax_single_thread(board: &Board, turn: &Color, depth: u8) -> (Move, i32) 
         cloned_board.next_turn();
 
         rated_moves.push((r#move,
-                          minimax_single_thread(&cloned_board,
-                                                &turn.enemy(),
-                                                depth - 1).1));
+                          -minimax_single_thread(&cloned_board,
+                                                 &turn.enemy(),
+                                                 depth - 1).1));
     }
 
     if rated_moves.len() == 0 {
@@ -137,7 +137,7 @@ fn minimax_single_thread(board: &Board, turn: &Color, depth: u8) -> (Move, i32) 
 
     let mut best_move = rated_moves[0];
     for rated_move in rated_moves.into_iter() {
-        if rated_move.1 < best_move.1 {
+        if rated_move.1 > best_move.1 {
             best_move = rated_move;
         }
     }
