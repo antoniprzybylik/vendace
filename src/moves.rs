@@ -186,8 +186,8 @@ fn minimax_single_thread(board: &Board, turn: &Color, depth: u8) -> (Option<Move
     }
 
     if rated_moves.len() == 0 {
-        // FIXME
-        panic!();
+        // Check Mate
+        return (None, -1000000);
     }
 
     let mut best_move = rated_moves[0];
