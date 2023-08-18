@@ -7,6 +7,8 @@ use super::board::KindOfPiece;
 use super::board::Piece;
 use super::book::Move;
 
+use rayon::prelude::*;
+
 fn is_check(board: &Board, color: &Color) -> bool {
     let enemy_color = color.enemy();
     let mut enemy_positions: Vec<Field> = Vec::new();
@@ -94,14 +96,38 @@ fn possible_moves(field: &Field, board: &Board) -> Vec<Move> {
 }
 
 pub fn get_move(board: &Board, turn: &Color) -> Move {
-    let (r#move, _) = minimax_single_thread(board, turn, 2);
+    let (r#move, _) = minimax_multithreaded(board, turn, 4);
 
     r#move
 }
 
 pub static mut STOP_ALL_THREADS: AtomicBool = AtomicBool::new(true);
 
-// TODO: minimax_multithreaded
+fn minimax_multithreaded(board: &Board, turn: &Color, depth: u8) -> (Move, i32) {
+    if depth < 4 {
+        return minimax_single_thread(board, turn, depth);
+    }
+
+    let moves_to_consider: Vec<Move> = player_moves(turn, board);
+    let best_move = moves_to_consider.par_iter().map(|r#move| {
+        let mut cloned_board = *board;
+        cloned_board.apply_unchecked(&r#move);
+        cloned_board.next_turn();
+
+        (*r#move,
+         -minimax_multithreaded(&cloned_board,
+                                &turn.enemy(),
+                                depth - 1).1)
+    }).reduce_with(|move1, move2| {
+        if move1.1 > move2.1 {
+            move1
+        } else {
+            move2
+        }
+    }).unwrap();
+
+    best_move
+}
 
 fn minimax_single_thread(board: &Board, turn: &Color, depth: u8) -> (Move, i32) {
     if depth == 0 {
