@@ -85,7 +85,7 @@ impl Book {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Move(u16);
 
 impl Move {

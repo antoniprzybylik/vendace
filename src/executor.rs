@@ -6,7 +6,8 @@ use super::book::Book;
 use super::book::BookEntry;
 use super::book::Move;
 
-use super::moves::player_moves;
+use super::moves::get_move;
+use super::moves::STOP_ALL_THREADS;
 
 lazy_static! {
     static ref BOOK: Book = Book::load("/usr/share/gnuchess/smallbook.bin").unwrap();
@@ -90,6 +91,9 @@ pub async fn executor(rx: mpsc::Receiver<String>) {
             "go" => {
                 // TODO: Zwracaj uwagę na parametry.
 
+                // Odblokuj obliczenia.
+                unsafe { *STOP_ALL_THREADS.get_mut() = false; }
+
                 if let Some(moves) = BOOK.get(&board.hash()) {
                     let (mut best_move, mut best_weight) = (0u16, 0u16);
                     for BookEntry { r#move, weight } in moves.iter() {
@@ -100,14 +104,9 @@ pub async fn executor(rx: mpsc::Receiver<String>) {
 
                     println!("bestmove {}", Move::try_from(best_move).unwrap());
                 } else {
-                    let moves = player_moves(&board.which_turn(), &board);
+                    let r#move = get_move(&board, &board.which_turn());
 
-                    if moves.len() == 0 {
-                        // FIXME
-                        unimplemented!();
-                    } else {
-                        println!("bestmove {}", moves[0]);
-                    }
+                    println!("bestmove {}", r#move);
                 }
             }
             _ => unreachable!(),

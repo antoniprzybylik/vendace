@@ -6,3 +6,4 @@ pub mod book;
 pub mod executor;
 pub mod moves;
 pub mod polyglot_data;
+pub mod tables;

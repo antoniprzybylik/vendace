@@ -6,6 +6,7 @@ use super::polyglot_data::RANDOM_CASTLE;
 use super::polyglot_data::RANDOM_EN_PASSANT;
 use super::polyglot_data::RANDOM_PIECE;
 use super::polyglot_data::RANDOM_TURN;
+use super::tables::piece_value;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum KindOfPiece {
@@ -406,6 +407,25 @@ impl Board {
     /// Next turn.
     pub fn next_turn(&mut self) {
         self.turn = self.turn.enemy();
+    }
+
+    /// Evaluate board.
+    pub fn eval(&self) -> i32 {
+        let mut sum: i32 = 0;
+
+        for i in 1..=8 {
+            for j in 1..=8 {
+                let field = Field::build_unchecked(i, j);
+                let value = match self.field_content(&field) {
+                    Some(piece) => piece_value(&field, &piece, true),
+                    None => 0,
+                };
+
+                sum += value;
+            }
+        }
+
+        sum
     }
 }
 

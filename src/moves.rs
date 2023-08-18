@@ -1,3 +1,5 @@
+use std::sync::atomic::AtomicBool;
+
 use super::board::Board;
 use super::board::Color;
 use super::board::Field;
@@ -71,6 +73,8 @@ fn possible_moves(field: &Field, board: &Board) -> Vec<Move> {
             && (target_field.get_row() == 1 || target_field.get_row() == 8)
         {
             moves.push(Move::build(field.clone(), target_field, Some(KindOfPiece::Queen)).unwrap());
+            moves.push(Move::build(field.clone(), target_field, Some(KindOfPiece::Knight)).unwrap());
+            // Nie ma co rozważać wieży i gońca bo nie dają nic więcej od hetmana.
         } else {
             moves.push(Move::build(field.clone(), target_field, None).unwrap());
         }
@@ -89,7 +93,58 @@ fn possible_moves(field: &Field, board: &Board) -> Vec<Move> {
     filtered_moves
 }
 
-pub fn player_moves(color: &Color, board: &Board) -> Vec<Move> {
+pub fn get_move(board: &Board, turn: &Color) -> Move {
+    let (r#move, _) = minimax_single_thread(board, turn, 2);
+
+    r#move
+}
+
+pub static mut STOP_ALL_THREADS: AtomicBool = AtomicBool::new(true);
+
+// TODO: minimax_multithreaded
+
+fn minimax_single_thread(board: &Board, turn: &Color, depth: u8) -> (Move, i32) {
+    if depth == 0 {
+        let quality = board.eval();
+
+        // Zwracamy niepoprawny ruch, ale to nie ma
+        // znaczenia, bo depth powinna być co najmniej
+        // 1 przy użyciu z zewnątrz.
+        if *turn == Color::White {
+            return (Move::try_from(0).unwrap(), quality);
+        } else {
+            return (Move::try_from(0).unwrap(), -quality);
+        }
+    }
+
+    let moves_to_consider: Vec<Move> = player_moves(turn, board);
+    let mut rated_moves: Vec<(Move, i32)> = Vec::new();
+    for r#move in moves_to_consider.into_iter() {
+        let mut cloned_board = *board;
+        cloned_board.apply_unchecked(&r#move);
+
+        rated_moves.push((r#move,
+                          minimax_single_thread(&cloned_board,
+                                                &turn.enemy(),
+                                                depth - 1).1));
+    }
+
+    if rated_moves.len() == 0 {
+        // FIXME
+        panic!();
+    }
+
+    let mut best_move = rated_moves[0];
+    for rated_move in rated_moves.into_iter() {
+        if rated_move.1 > best_move.1 {
+            best_move = rated_move;
+        }
+    }
+
+    best_move
+}
+
+fn player_moves(color: &Color, board: &Board) -> Vec<Move> {
     let mut moves: Vec<Move> = Vec::new();
 
     for row in 1..=8 {
@@ -310,12 +365,13 @@ fn pawn_moves_unchecked(field: &Field, board: &Board) -> Vec<Field> {
     if let Some(next_field) = Field::build(next_row, field.get_file() as i32) {
         if *board.field_content(&next_field) == None {
             moves.push(next_field);
-        } else if (color == Color::White && field.get_row() == 2)
-            || (color == Color::Black && field.get_row() == 7)
-        {
-            if let Some(next2_field) = Field::build(next2_row, field.get_file() as i32) {
-                if *board.field_content(&next2_field) == None {
-                    moves.push(next2_field);
+            if (color == Color::White && field.get_row() == 2)
+                || (color == Color::Black && field.get_row() == 7)
+            {
+                if let Some(next2_field) = Field::build(next2_row, field.get_file() as i32) {
+                    if *board.field_content(&next2_field) == None {
+                        moves.push(next2_field);
+                    }
                 }
             }
         }

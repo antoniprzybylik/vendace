@@ -3,6 +3,7 @@ use std::io::{self, Write};
 use std::sync::mpsc;
 
 use vendace::executor::executor;
+use vendace::moves::STOP_ALL_THREADS;
 
 #[tokio::main]
 async fn main() {
@@ -50,13 +51,17 @@ async fn main() {
                 tx.send(input).unwrap();
             }
             "go" => {
+                // Odblokowanie `STOP_ALL_THREADS` po
+                // otrzymaniu wiadomości. Chodzi o to,
+                // żeby po otrzymaniu `stop` i `go` nie
+                // wznowić tych samych obliczeń.
                 tx.send(input).unwrap();
             }
             "quit" => {
                 std::process::exit(0);
             }
             "stop" => {
-                // TODO: Stop executor thread.
+                unsafe { *STOP_ALL_THREADS.get_mut() = true; }
             }
             _ => {
                 println!(
