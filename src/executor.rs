@@ -20,6 +20,9 @@ pub async fn executor(rx: mpsc::Receiver<String>) {
         let tokens = cmd.split_whitespace().collect::<Vec<&str>>();
 
         match tokens[0] {
+            "debug_quality" => {
+                println!("Quality = {}", board.eval());
+            },
             "position" => {
                 let mut pos_set: bool = false;
                 let mut mov_set: bool = false;

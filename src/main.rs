@@ -27,6 +27,9 @@ async fn main() {
         };
 
         match first_token {
+            "debug_quality" => {
+                tx.send(input).unwrap();
+            }
             "help" => {
                 println!(
                     "\nVendace is a chess engine for playing and analyzing.\n\
