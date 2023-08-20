@@ -24,12 +24,12 @@ impl fmt::Display for KindOfPiece {
             f,
             "{}",
             match self {
-                KindOfPiece::Pawn => "Pawn",
-                KindOfPiece::Knight => "Knight",
-                KindOfPiece::Bishop => "Bishop",
-                KindOfPiece::Rook => "Rook",
-                KindOfPiece::Queen => "Queen",
-                KindOfPiece::King => "King",
+                KindOfPiece::Pawn => "p",
+                KindOfPiece::Knight => "n",
+                KindOfPiece::Bishop => "b",
+                KindOfPiece::Rook => "r",
+                KindOfPiece::Queen => "q",
+                KindOfPiece::King => "k",
             }
         )
     }
