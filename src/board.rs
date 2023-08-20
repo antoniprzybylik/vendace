@@ -430,23 +430,40 @@ impl Board {
         self.turn = self.turn.enemy();
     }
 
-    /// Evaluate board.
-    pub fn eval(&self) -> i32 {
-        let mut sum: i32 = 0;
+    fn eval_players(&self, early_stage: bool) -> (i32, i32) {
+        let mut pos_sum: i32 = 0;
+        let mut neg_sum: i32 = 0;
 
         for i in 1..=8 {
             for j in 1..=8 {
                 let field = Field::build_unchecked(i, j);
                 let value = match self.field_content(&field) {
-                    Some(piece) => piece_value(&field, &piece, true),
+                    Some(piece) => piece_value(&field, &piece, early_stage),
                     None => 0,
                 };
 
-                sum += value;
+                if value > 0 {
+                    pos_sum += value;
+                } else {
+                    neg_sum += value;
+                }
             }
         }
 
-        sum
+        (pos_sum, neg_sum)
+    }
+
+    /// Evaluate board.
+    pub fn eval(&self) -> i32 {
+        let (pos_sum, neg_sum) = self.eval_players(true);
+
+        if (pos_sum <= 22050) || (-neg_sum <= 22050) {
+            let (pos_sum, neg_sum) = self.eval_players(false);
+
+            pos_sum + neg_sum
+        } else {
+            pos_sum + neg_sum
+        }
     }
 }
 
