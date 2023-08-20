@@ -100,7 +100,11 @@ fn possible_moves(field: &Field, board: &Board) -> Vec<Move> {
             let start_file = r#move.from_file_number();
             let stop_file = r#move.to_file_number();
 
-            for file in start_file..=stop_file {
+            for file in if start_file < stop_file {
+                start_file..=stop_file
+            } else {
+                stop_file..=start_file
+            } {
                 cloned_board.fields[(row - 1) as usize][(file - 1) as usize] = Some(Piece {
                     kind_of_piece: KindOfPiece::King,
                     color: piece.color,
