@@ -309,6 +309,27 @@ impl Board {
                 }
             }
 
+            // Jeżeli wieża ruszyła się
+            // ze swojego miejsca, unieważniamy
+            // tą roszadę.
+            if piece.kind_of_piece == KindOfPiece::Rook {
+                match (r#move.from_row(), r#move.from_file_number()) {
+                    (1, 1) => {
+                        self.castle[1] = false;
+                    }
+                    (1, 8) => {
+                        self.castle[0] = false;
+                    }
+                    (8, 1) => {
+                        self.castle[3] = false;
+                    }
+                    (8, 8) => {
+                        self.castle[2] = false;
+                    }
+                    _ => {}
+                }
+            }
+
             // Biały bije przelotem.
             if piece.color == Color::White
                 && self.en_passant[(r#move.to_file_number() - 1) as usize]
