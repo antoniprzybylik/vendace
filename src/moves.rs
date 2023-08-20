@@ -2,6 +2,7 @@ use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 
 use super::board::Board;
+use super::board::Castle;
 use super::board::Color;
 use super::board::Field;
 use super::board::KindOfPiece;
@@ -87,7 +88,29 @@ fn possible_moves(field: &Field, board: &Board) -> Vec<Move> {
     let mut filtered_moves: Vec<Move> = Vec::new();
     for r#move in moves.into_iter() {
         let mut cloned_board = *board;
-        cloned_board.apply_unchecked(&r#move);
+
+        // Roszada: Sprawdzamy czy król nie przechodzi
+        // przez szachowane pole.
+        if piece.kind_of_piece == KindOfPiece::King
+            && (r#move.to_file_number() as i16 - r#move.from_file_number() as i16).abs() >= 2
+        {
+            // Roszada: Sprawdzamy czy król nie przechodzi
+            // przez szachowane pole.
+            let row = r#move.to_row();
+            let start_file = r#move.from_file_number();
+            let stop_file = r#move.to_file_number();
+
+            for file in start_file..=stop_file {
+                cloned_board.fields[(row - 1) as usize][(file - 1) as usize] = Some(Piece {
+                    kind_of_piece: KindOfPiece::King,
+                    color: piece.color,
+                });
+            }
+        } else {
+            // Nie-Roszada: Sprawdzamy czy po ruchu nie
+            // ma szacha.
+            cloned_board.apply_unchecked(&r#move);
+        }
 
         if !is_check(&cloned_board, &piece.color) {
             filtered_moves.push(r#move);
@@ -217,6 +240,47 @@ fn player_moves(color: &Color, board: &Board) -> Vec<Move> {
     moves
 }
 
+// Tutaj nie sprawdzam czy pola przez które
+// przechodzi król nie są szachowane.
+fn can_castle_short(color: &Color, board: &Board) -> bool {
+    let row = if *color == Color::White { 1 } else { 8 };
+
+    *board.field_content(&Field::build_unchecked(row, 5))
+        == Some(Piece {
+            kind_of_piece: KindOfPiece::King,
+            color: *color,
+        })
+        && *board.field_content(&Field::build_unchecked(row, 6)) == None
+        && *board.field_content(&Field::build_unchecked(row, 7)) == None
+        && *board.field_content(&Field::build_unchecked(row, 8))
+            == Some(Piece {
+                kind_of_piece: KindOfPiece::Rook,
+                color: *color,
+            })
+        && board.can_castle(color, &Castle::Short)
+}
+
+// Tutaj nie sprawdzam czy pola przez które
+// przechodzi król nie są szachowane.
+fn can_castle_long(color: &Color, board: &Board) -> bool {
+    let row = if *color == Color::White { 1 } else { 8 };
+
+    *board.field_content(&Field::build_unchecked(row, 5))
+        == Some(Piece {
+            kind_of_piece: KindOfPiece::King,
+            color: *color,
+        })
+        && *board.field_content(&Field::build_unchecked(row, 4)) == None
+        && *board.field_content(&Field::build_unchecked(row, 3)) == None
+        && *board.field_content(&Field::build_unchecked(row, 2)) == None
+        && *board.field_content(&Field::build_unchecked(row, 1))
+            == Some(Piece {
+                kind_of_piece: KindOfPiece::Rook,
+                color: *color,
+            })
+        && board.can_castle(color, &Castle::Short)
+}
+
 fn king_moves_unchecked(field: &Field, board: &Board) -> Vec<Field> {
     let to_filter = match (field.get_row(), field.get_file()) {
         (2..=7, 2..=7) => vec![
@@ -296,6 +360,28 @@ fn king_moves_unchecked(field: &Field, board: &Board) -> Vec<Field> {
             _ => {
                 moves.push(field);
             }
+        }
+    }
+
+    // Dodajemy roszady które mogą zostać
+    // wykonane.
+    if color == Color::White && *field == (Field::build_unchecked(1, 5)) {
+        if can_castle_short(&color, &board) {
+            moves.push(Field::build_unchecked(1, 7));
+        }
+
+        if can_castle_long(&color, &board) {
+            moves.push(Field::build_unchecked(1, 3));
+        }
+    }
+
+    if color == Color::Black && *field == (Field::build_unchecked(8, 5)) {
+        if can_castle_short(&color, &board) {
+            moves.push(Field::build_unchecked(8, 7));
+        }
+
+        if can_castle_long(&color, &board) {
+            moves.push(Field::build_unchecked(8, 3));
         }
     }
 

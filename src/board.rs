@@ -131,7 +131,7 @@ impl Piece {
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Board {
-    fields: [[Option<Piece>; 8]; 8],
+    pub fields: [[Option<Piece>; 8]; 8],
     castle: [bool; 4],
     en_passant: [bool; 8],
     turn: Color,
@@ -229,8 +229,8 @@ impl Board {
     }
 
     /// Can player of color `color` castle on side `side`.
-    pub fn can_castle(&self, color: Color, side: Castle) -> bool {
-        match (color, side) {
+    pub fn can_castle(&self, color: &Color, side: &Castle) -> bool {
+        match (*color, *side) {
             (Color::White, Castle::Short) => self.castle[0],
             (Color::White, Castle::Long) => self.castle[1],
             (Color::Black, Castle::Short) => self.castle[2],
