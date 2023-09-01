@@ -2,6 +2,8 @@
 name = "vendace"
 version = "0.1.0"
 edition = "2021"
+authors = ["Antoni Przybylik <antoni.przybylik@wp.pl>"]
+license = "GPL-2.0"
 
 [dependencies]
 rayon = "1.7.0"
